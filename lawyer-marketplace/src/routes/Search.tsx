@@ -1,0 +1,78 @@
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { loadLawyers } from '../data';
+import type { LawyerProfile } from '../types';
+
+function LawyerCard({ lawyer }: { lawyer: LawyerProfile }) {
+  return (
+    <div className="rounded border p-4 flex items-start gap-4">
+      <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold">
+        {lawyer.fullName.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+      </div>
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">
+            <Link to={`/lawyers/${lawyer.id}`} className="hover:underline">
+              {lawyer.fullName}
+            </Link>
+          </h3>
+          <div className="text-sm text-gray-600">{lawyer.location}</div>
+        </div>
+        <div className="text-sm text-gray-700">{lawyer.practiceArea} • {lawyer.yearsOfExperience} yrs</div>
+        <div className="mt-1 text-sm">Rating: {lawyer.rating.toFixed(1)} / 5 • Fee: ${lawyer.hourlyRate}/hr</div>
+        {lawyer.bio && <p className="mt-2 text-sm text-gray-700 line-clamp-2">{lawyer.bio}</p>}
+      </div>
+    </div>
+  );
+}
+
+export function Search() {
+  const [query, setQuery] = useState('');
+  const [location, setLocation] = useState('');
+  const [practiceArea, setPracticeArea] = useState('');
+
+  const lawyers = loadLawyers();
+
+  const practiceAreas = useMemo(() => Array.from(new Set(lawyers.map(l => l.practiceArea))).sort(), [lawyers]);
+  const locations = useMemo(() => Array.from(new Set(lawyers.map(l => l.location))).sort(), [lawyers]);
+
+  const results = useMemo(() => {
+    return lawyers.filter(l => {
+      const matchesQuery = !query || [l.fullName, l.practiceArea, l.location, l.bio].join(' ').toLowerCase().includes(query.toLowerCase());
+      const matchesLoc = !location || l.location === location;
+      const matchesPA = !practiceArea || l.practiceArea === practiceArea;
+      return matchesQuery && matchesLoc && matchesPA;
+    });
+  }, [lawyers, query, location, practiceArea]);
+
+  return (
+    <div className="p-6 max-w-5xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Find an attorney</h1>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+        <input
+          className="rounded border px-3 py-2 md:col-span-2"
+          placeholder="Search by name, area, location..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <select className="rounded border px-3 py-2" value={location} onChange={(e) => setLocation(e.target.value)}>
+          <option value="">All locations</option>
+          {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+        </select>
+        <select className="rounded border px-3 py-2" value={practiceArea} onChange={(e) => setPracticeArea(e.target.value)}>
+          <option value="">All practice areas</option>
+          {practiceAreas.map(pa => <option key={pa} value={pa}>{pa}</option>)}
+        </select>
+      </div>
+
+      <div className="space-y-3">
+        {results.map(lawyer => (
+          <LawyerCard key={lawyer.id} lawyer={lawyer} />
+        ))}
+        {results.length === 0 && (
+          <div className="text-sm text-gray-600">No lawyers found. Try adjusting your filters.</div>
+        )}
+      </div>
+    </div>
+  );
+}
