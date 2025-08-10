@@ -5,6 +5,8 @@ import { AttorneyDashboard } from './routes/AttorneyDashboard';
 import { Login } from './routes/Login';
 import { Search } from './routes/Search';
 import { Profile } from './routes/Profile';
+import { Resources } from './routes/Resources';
+import { Emergency } from './routes/Emergency';
 
 export const router = createBrowserRouter([
   {
@@ -17,6 +19,8 @@ export const router = createBrowserRouter([
       { path: 'lawyers/:id', element: <Profile /> },
       { path: 'client', element: <ClientDashboard /> },
       { path: 'attorney', element: <AttorneyDashboard /> },
+      { path: 'resources', element: <Resources /> },
+      { path: 'emergency', element: <Emergency /> },
     ],
   },
 ]);
