@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String          @id @default(cuid())
+  email            String          @unique
+  passwordHash     String
+  role             Role
+  name             String
+  phone            String?
+  languages        Json?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  lawyerProfile    LawyerProfile?
+  reviews          Review[]        @relation("UserReviews")
+  messagesSent     Message[]       @relation("MessagesSent")
+  messagesReceived Message[]       @relation("MessagesReceived")
+  appointments     Appointment[]   @relation("UserAppointments")
+}
+
+model LawyerProfile {
+  id              String            @id @default(cuid())
+  user            User              @relation(fields: [userId], references: [id])
+  userId          String            @unique
+  bio             String?
+  specialties     Json?
+  yearsExperience Int?
+  rating          Float             @default(0)
+  numReviews      Int               @default(0)
+  location        String?
+  latitude        Float?
+  longitude       Float?
+  education       String?
+  licenseNumber   String?
+  verified        Boolean           @default(false)
+  photoUrl        String?
+  availability    AvailabilitySlot[]
+  appointments    Appointment[]
+  reviews         Review[]
+}
+
+model AvailabilitySlot {
+  id        String         @id @default(cuid())
+  lawyer    LawyerProfile  @relation(fields: [lawyerId], references: [id])
+  lawyerId  String
+  start     DateTime
+  end       DateTime
+  isVirtual Boolean        @default(true)
+}
+
+model Appointment {
+  id         String            @id @default(cuid())
+  lawyer     LawyerProfile     @relation(fields: [lawyerId], references: [id])
+  lawyerId   String
+  client     User              @relation("UserAppointments", fields: [clientId], references: [id])
+  clientId   String
+  start      DateTime
+  end        DateTime
+  isVirtual  Boolean           @default(true)
+  status     AppointmentStatus @default(SCHEDULED)
+  notes      String?
+  paymentId  String?
+  review     Review?           @relation("AppointmentReview", fields: [reviewId], references: [id])
+  reviewId   String?           @unique
+}
+
+model Review {
+  id           String         @id @default(cuid())
+  rating       Int
+  comment      String?
+  createdAt    DateTime       @default(now())
+  lawyer       LawyerProfile  @relation(fields: [lawyerId], references: [id])
+  lawyerId     String
+  author       User           @relation("UserReviews", fields: [authorId], references: [id])
+  authorId     String
+  appointment  Appointment?   @relation("AppointmentReview")
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  roomId      String
+  content     String
+  createdAt   DateTime @default(now())
+  sender      User     @relation("MessagesSent", fields: [senderId], references: [id])
+  senderId    String
+  recipient   User     @relation("MessagesReceived", fields: [recipientId], references: [id])
+  recipientId String
+}
+
+model Article {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String
+  language  String   @default("en")
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  CLIENT
+  LAWYER
+  ADMIN
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELED
+}
