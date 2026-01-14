@@ -1,3 +1,5 @@
 ## hello, git!
-- i am adding a new branch!
-# what's up bro what are you doing right here alone
+
+-hell no i was suppose to be the one makes changes!
+# just accept your fate
+
